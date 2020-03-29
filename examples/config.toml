@@ -1,0 +1,10 @@
+# IP for multiplexer to listen on
+Listen = ":18833"
+# UDP buffer size
+Buffer = 256
+
+[Log]
+# Log short filenames
+Debug = true
+# Log in local time
+#LocalTime = true
