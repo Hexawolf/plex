@@ -3,6 +3,10 @@ Listen = ":18833"
 # UDP buffer size
 Buffer = 256
 
+Route = [
+    "127.0.0.1:9999"
+]
+
 [Log]
 # Log short filenames
 Debug = true

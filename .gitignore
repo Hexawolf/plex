@@ -1,1 +1,8 @@
 /.idea/
+*build*/
+/config.toml
+/plex
+/cmd/plexd/plexd
+/cmd/plexctl/plexctl
+*.exe
+

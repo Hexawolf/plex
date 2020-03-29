@@ -11,6 +11,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strings"
 )
 
 func logSetup(lc *viper.Viper) {
@@ -19,6 +20,20 @@ func logSetup(lc *viper.Viper) {
 	}
 	if lc.GetBool("Debug") {
 		log.SetFlags(log.Flags() | log.Lshortfile)
+	}
+}
+
+var mp *plex.Plex
+
+func SubscribeAllUDP() {
+	routes := viper.GetStringSlice("Route")
+	for _, v := range routes {
+		raddr, err := net.ResolveUDPAddr(plex.UDP, v)
+		if err != nil { log.Println(err); continue }
+		conn, err := net.DialUDP(plex.UDP, nil, raddr)
+		if err != nil { log.Println(err); continue }
+		err = mp.SubscribeUDP(v, conn)
+		if err != nil { log.Println(err); continue }
 	}
 }
 
@@ -36,31 +51,21 @@ func main() {
 	}
 	viper.WatchConfig()
 	logSetup(viper.Sub("Log"))
+	fmt.Println("plexd | Copyright (C) Hexawolf <hexawolf@hexanet.dev>\nSee LICENSE for more info.")
 
-	mp, err := plex.NewPlex(viper.GetString("Listen"), uint16(viper.GetInt("Buffer")), nil)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	_mp, err := plex.NewPlex(viper.GetString("Listen"), uint16(viper.GetInt("Buffer")), nil)
+	if err != nil { log.Fatalln(err) }
+	mp = &_mp
 	go func() {
-		err = mp.ListenUDP()
-		if err != nil {
-			log.Fatalln(err)
-		}
+		err = _mp.ListenUDP()
+		if err != nil && !strings.Contains(err.Error(), "closed") { log.Fatalln(err) }
 	}()
 
 	// Subscribe routes
-	routes := viper.GetStringSlice("Route")
-	for _, v := range routes {
-		raddr, err := net.ResolveUDPAddr("", v)
-		if err != nil { log.Println(err); continue }
-		conn, err := net.DialUDP("", nil, raddr)
-		if err != nil { log.Println(err); continue }
-		err = mp.SubscribeUDP(v, conn)
-		if err != nil { log.Println(err); continue }
-	}
+	SubscribeAllUDP()
 	
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
-	<-c
-	mp.Close()
+	<-c; _mp.Close()
+	fmt.Println()
 }

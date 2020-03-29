@@ -17,6 +17,7 @@ type Plex struct {
 	out    *io.PipeReader
 	subs   map[string]io.WriteCloser
 }
+const UDP = "udp"
 
 // NewPlex creates a new UDP multicast instance, binding a listener to supplied local address (_laddr)
 // and allocating buffer with given size (_bsize).
@@ -24,10 +25,11 @@ func NewPlex(_laddr string, _bsize uint16, _log *log.Logger) (mp Plex, err error
 	if _log == nil { _log = log.New(os.Stdout, "plex ", log.Flags()) }
 	mp.log = _log
 	var laddr *net.UDPAddr
-	laddr, err = net.ResolveUDPAddr("", _laddr)
+	laddr, err = net.ResolveUDPAddr(UDP, _laddr)
 	if err != nil { return }
-	mp.sock, err = net.ListenUDP("", laddr)
+	mp.sock, err = net.ListenUDP(UDP, laddr)
 	if err != nil { return }
+	mp.subs = make(map[string]io.WriteCloser)
 	mp.out, mp.in = io.Pipe()
 	go func() { for {
 		buf := make([]byte, _bsize)
@@ -45,26 +47,30 @@ func NewPlex(_laddr string, _bsize uint16, _log *log.Logger) (mp Plex, err error
 	return
 }
 
-func (mp *Plex) ListenUDP() (err error) { for {
-	if _, err = io.Copy(mp.in, mp.sock); err != nil { return }
-}}
+func (mp *Plex) ListenUDP() (err error) {
+	mp.log.Println("Listening on", mp.sock.LocalAddr().String());
+	_, err = io.Copy(mp.in, mp.sock)
+	return
+}
 
 func (mp *Plex) SubscribeUDP(_raddr string, out *net.UDPConn) (err error) {
 	var raddr *net.UDPAddr
-	raddr, err = net.ResolveUDPAddr("", _raddr)
+	raddr, err = net.ResolveUDPAddr(UDP, _raddr)
 	if err != nil { return }
-	out, err = net.DialUDP("", nil, raddr)
+	out, err = net.DialUDP(UDP, nil, raddr)
 	if err != nil { return }
 	mp.subs[_raddr] = out
+	mp.log.Println("Subscribed:", _raddr)
 	return
+}
+
+func (mp *Plex) SubscribeAllUDP() {
+	
 }
 
 func (mp *Plex) Close() (err error) {
 	err = mp.sock.Close()
-	mp.in.Close()
-	mp.out.Close()
-	for _, v := range mp.subs {
-		v.Close()
-	}
+	mp.in.Close(); mp.out.Close()
+	for _, v := range mp.subs { v.Close() }
 	return
 }
