@@ -8,7 +8,6 @@ import (
 	"github.com/Hexawolf/plex"
 	"github.com/spf13/viper"
 	"log"
-	"net"
 	"os"
 	"os/signal"
 	"strings"
@@ -28,12 +27,7 @@ var mp *plex.Plex
 func SubscribeAllUDP() {
 	routes := viper.GetStringSlice("Route")
 	for _, v := range routes {
-		raddr, err := net.ResolveUDPAddr(plex.UDP, v)
-		if err != nil { log.Println(err); continue }
-		conn, err := net.DialUDP(plex.UDP, nil, raddr)
-		if err != nil { log.Println(err); continue }
-		err = mp.SubscribeUDP(v, conn)
-		if err != nil { log.Println(err); continue }
+		if err := mp.SubscribeUDP(v); err != nil { log.Println(err); continue }
 	}
 }
 
@@ -53,11 +47,11 @@ func main() {
 	logSetup(viper.Sub("Log"))
 	fmt.Println("plexd | Copyright (C) Hexawolf <hexawolf@hexanet.dev>\nSee LICENSE for more info.")
 
-	_mp, err := plex.NewPlex(viper.GetString("Listen"), uint16(viper.GetInt("Buffer")), nil)
+	_mp, err := plex.NewPlex(uint16(viper.GetInt("Buffer")), nil)
 	if err != nil { log.Fatalln(err) }
 	mp = &_mp
 	go func() {
-		err = _mp.ListenUDP()
+		err = _mp.ListenUDP(viper.GetString("Listen"))
 		if err != nil && !strings.Contains(err.Error(), "closed") { log.Fatalln(err) }
 	}()
 
