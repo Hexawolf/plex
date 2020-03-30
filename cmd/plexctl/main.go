@@ -1,5 +1,5 @@
 // plexctl - edits routes in plexd config
-// Copyright (C) Hexawolf <hexawolf@hexanet.dev>
+// Copyright (C) 2020 Hexawolf <hexawolf@hexanet.dev>
 // See LICENSE file for more info
 package main
 

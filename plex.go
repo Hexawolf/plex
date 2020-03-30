@@ -1,5 +1,5 @@
 // plex - User-space UDP broker to replace IP multicasts
-// Copyright (C) Hexawolf <hexawolf@hexanet.dev>
+// Copyright (C) 2020 Hexawolf <hexawolf@hexanet.dev>
 // See LICENSE file for more info
 package plex
 
@@ -62,10 +62,6 @@ func (mp *Plex) SubscribeUDP(_raddr string, out *net.UDPConn) (err error) {
 	mp.subs[_raddr] = out
 	mp.log.Println("Subscribed:", _raddr)
 	return
-}
-
-func (mp *Plex) SubscribeAllUDP() {
-	
 }
 
 func (mp *Plex) Close() (err error) {

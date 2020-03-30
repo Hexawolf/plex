@@ -1,6 +1,6 @@
 # IP for multiplexer to listen on
 Listen = ":18833"
-# UDP buffer size
+# UDP buffer size for sending
 Buffer = 256
 
 Route = [

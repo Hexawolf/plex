@@ -1,5 +1,5 @@
 // plexd - broker daemon. Forwards traffic between input socket and subscribers.
-// Copyright (C) Hexawolf <hexawolf@hexanet.dev>
+// Copyright (C) 2020 Hexawolf <hexawolf@hexanet.dev>
 // See LICENSE file for more info
 package main
 
